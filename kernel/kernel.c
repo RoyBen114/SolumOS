@@ -15,6 +15,6 @@ void print(const char *str,int x,int y){
 }
 int kernel_main()
 {
-    print_at("Welcome to Solum OS",0,1);
+    print("Welcome to Solum OS",0,1);
     return 0;
 }
