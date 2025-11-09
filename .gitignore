@@ -1,4 +1,5 @@
 .vscode/
 *.o
-*.elf
+kernel.elf
+isodir/boot/kernel.elf
 Solum.iso

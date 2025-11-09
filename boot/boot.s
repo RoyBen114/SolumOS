@@ -17,5 +17,5 @@ section .text
 global _start
 extern kernel_main
 _start:
-    ; 调用内核主函数
     call kernel_main
+    hlt
