@@ -1,17 +1,23 @@
 TARGET = Solum.iso
-OBJ = boot/boot.o kernel/kernel.o
 KELF = kernel.elf
+LINKSCR = linker.ld
+BOOT_OBJ = boot/boot.o
+KERN_OBJ = kernel/kernel.o
+S_SRC = boot/boot.s
+C_SRC = kernel/kernel.c
 
-$(TARGET): $(KELF)
+$(TARGET): $(KELF) grub.cfg
 	cp grub.cfg ISODir/boot/grub/grub.cfg
 	cp $(KELF) ISODir/SolumOS/$(KELF)
 	grub-mkrescue -o Solum.iso ISODir/
 
-$(KELF): $(OBJ)
-	ld -m elf_i386 -n -T linker.ld -o $(KELF) $(OBJ)
+$(KELF): $(BOOT_OBJ) $(KERN_OBJ) $(LINKSCR)
+	ld -m elf_i386 -n -T $(LINKSCR) -o $(KELF) $(BOOT_OBJ) $(KERN_OBJ)
 
-$(OBJ):
+$(BOOT_OBJ): $(S_SRC)
 	make -C boot all
+
+$(KERN_OBJ): $(C_SRC)
 	make -C kernel all
 
 clean: 
@@ -21,7 +27,6 @@ clean:
 	rm -f $(KELF)
 
 run:
-	make clean
 	make
 	qemu-system-x86_64 -cdrom $(TARGET) -m 1G
 
