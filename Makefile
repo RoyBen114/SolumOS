@@ -3,16 +3,16 @@ OBJ = boot/boot.o kernel/kernel.o
 KELF = kernel.elf
 
 $(TARGET): $(KELF)
-	cp grub.cfg isodir/boot/grub/grub.cfg
-	cp $(KELF) isodir/boot/$(KELF)
-	grub-mkrescue -o Solum.iso isodir/
+	cp grub.cfg ISODir/boot/grub/grub.cfg
+	cp $(KELF) ISODir/SolumOS/$(KELF)
+	grub-mkrescue -o Solum.iso ISODir/
 
 $(KELF): $(OBJ)
 	ld -m elf_i386 -n -T linker.ld -o $(KELF) $(OBJ)
 
 $(OBJ):
 	make -C boot all
-	make -C kernel
+	make -C kernel all
 
 clean: 
 	make -C boot clean
