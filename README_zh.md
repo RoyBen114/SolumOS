@@ -19,9 +19,10 @@ Solum OS 是基于 Multiboot2 规范的 x64 操作系统项目，目前处于早
 ### 构建命令
 
 ```bash
-make        # 完整系统构建
-make run    # 构建并启动 QEMU
-make clean  # 清理构建文件
+make         # 完整系统构建
+make debug_B # 构建并使用BIOS启动 QEMU
+make debug_U # 构建并使用UEFI启动 QEMU
+make clean   # 清理构建文件
 ```
 
 ## 技术特性

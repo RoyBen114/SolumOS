@@ -19,9 +19,10 @@ Solum OS is an x64 operating system project based on the Multiboot2 specificatio
 ### Build Commands
 
 ```bash
-make        # Build complete system
-make run    # Build and run in QEMU
-make clean  # Clean build files
+make         # Build complete system
+make debug_B # Build and run in BIOS in QEMU
+make debug_U # Build and run in UEFI in QEMU
+make clean   # Clean build files
 ```
 
 ## Technical Features
