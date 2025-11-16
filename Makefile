@@ -26,8 +26,12 @@ clean:
 	rm -f $(TARGET)
 	rm -f $(KELF)
 
-run:
+debug_B:
 	make
 	qemu-system-x86_64 -cdrom $(TARGET) -m 1G -serial stdio
 
-.PHONY: run clean
+debug_U:
+	make
+	qemu-system-x86_64 -bios /usr/share/ovmf/OVMF.fd -cdrom $(TARGET) -m 1G -serial stdio
+
+.PHONY: run debug_B debug_U
