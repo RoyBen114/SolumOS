@@ -6,7 +6,6 @@ volatile unsigned char *video = (volatile unsigned char *)0xB8000;
 
 struct boot_info
 {
-    uint32_t boot_type;
     uint64_t framebuffer_addr;
     uint32_t framebuffer_width;
     uint32_t framebuffer_height;
@@ -223,17 +222,6 @@ void kernel_main(struct boot_info *info)
     serial_init();
     serial_puts("\n === Debug ===\n");
 
-    // 输出详细的引导信息
-    serial_puts("Boot type: ");
-    if (info->boot_type == 0)
-    {
-        serial_puts("BIOS\n");
-    }
-    else
-    {
-        serial_puts("UEFI\n");
-    }
-
     serial_puts("Framebuffer address: ");
     serial_put_hex(info->framebuffer_addr);
     serial_puts("\n");
@@ -257,5 +245,4 @@ void kernel_main(struct boot_info *info)
     serial_puts("Kernel initialization complete\n");
 
     cls();
-    kprintf("abcde");
 }
