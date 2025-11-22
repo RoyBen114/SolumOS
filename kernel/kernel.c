@@ -218,11 +218,25 @@ void serial_printf(const char *format, ...) {
 }
 //===================================================↑serial functions↑==================================================
 
-#define COLOR_BLACK     0xFF000000
-#define COLOR_WHITE     0xFFFFFFFF
-#define COLOR_RED       0xFFFF0000
-#define COLOR_GREEN     0xFF00FF00
-#define COLOR_BLUE      0xFF0000FF
+// 根据BPP定义颜色格式
+#define COLOR_BLACK16     0x0000
+#define COLOR_WHITE16     0xFFFF
+#define COLOR_RED16       0xF800
+#define COLOR_GREEN16     0x07E0
+#define COLOR_BLUE16      0x001F
+
+#define COLOR_BLACK24     0x000000
+#define COLOR_WHITE24     0xFFFFFF
+#define COLOR_RED24       0xFF0000
+#define COLOR_GREEN24     0x00FF00
+#define COLOR_BLUE24      0x0000FF
+
+#define COLOR_BLACK32     0x00000000
+#define COLOR_WHITE32     0xFFFFFFFF
+#define COLOR_RED32       0xFFFF0000
+#define COLOR_GREEN32     0xFF00FF00
+#define COLOR_BLUE32      0xFF0000FF
+
 #define MULTIBOOT2_TAG_TYPE_FRAMEBUFFER 8
 
 // Framebuffer信息结构
@@ -232,6 +246,7 @@ struct framebuffer_info {
     uint32_t height;
     uint32_t pitch;
     uint32_t bpp;
+    uint32_t type;
 };
 
 struct multiboot2_tag {
@@ -259,24 +274,65 @@ struct multiboot2_info {
 
 // 全局framebuffer信息
 static struct framebuffer_info fb_info = {0};
-static uint32_t* backbuffer = NULL;
+static uint8_t* backbuffer = NULL;
+
+// 颜色转换函数
+uint32_t convert_color(uint32_t color, uint32_t target_bpp) {
+    switch (target_bpp) {
+        case 16: {
+            // 从32位ARGB转换为16位RGB565
+            uint8_t r = (color >> 19) & 0x1F;  // 5 bits
+            uint8_t g = (color >> 10) & 0x3F;  // 6 bits  
+            uint8_t b = (color >> 3) & 0x1F;   // 5 bits
+            return (r << 11) | (g << 5) | b;
+        }
+        case 24: {
+            // 从32位ARGB转换为24位RGB
+            return color & 0xFFFFFF;
+        }
+        case 32:
+        default:
+            return color;
+    }
+}
+
+// 绘制像素函数
+void draw_pixel(uint8_t* buffer, int x, int y, uint32_t color, uint32_t bpp, uint32_t width, uint32_t pitch) {
+    if (x < 0 || x >= (int)width || y < 0 || y >= (int)fb_info.height) return;
+    
+    uint32_t converted_color = convert_color(color, bpp);
+    uint32_t bytes_per_pixel = bpp / 8;
+    uint32_t offset = y * pitch + x * bytes_per_pixel;
+    
+    switch (bytes_per_pixel) {
+        case 2: // 16 bpp
+            *(uint16_t*)(buffer + offset) = (uint16_t)converted_color;
+            break;
+        case 3: // 24 bpp
+            buffer[offset] = (converted_color >> 16) & 0xFF;     // R
+            buffer[offset + 1] = (converted_color >> 8) & 0xFF;  // G
+            buffer[offset + 2] = converted_color & 0xFF;         // B
+            break;
+        case 4: // 32 bpp
+            *(uint32_t*)(buffer + offset) = converted_color;
+            break;
+    }
+}
 
 // 初始化framebuffer
 struct framebuffer_info* framebuffer_init(uint64_t multiboot_info_addr) {
-    // 直接使用物理地址访问multiboot信息（恒等映射）
     struct multiboot2_info* mbi = (struct multiboot2_info*)multiboot_info_addr;
     uint8_t* current_tag = mbi->tags;
     
     serial_printf("Searching for framebuffer tag...\n");
     serial_printf("Multiboot info total size: %u\n", mbi->total_size);
     
-    // 查找framebuffer tag
     while (1) {
         struct multiboot2_tag* tag = (struct multiboot2_tag*)current_tag;
         
         if (tag->type == 0) {
             serial_printf("End tag found\n");
-            break; // END tag
+            break;
         }
         
         serial_printf("Tag type: %u, size: %u\n", tag->type, tag->size);
@@ -290,6 +346,7 @@ struct framebuffer_info* framebuffer_init(uint64_t multiboot_info_addr) {
             fb_info.height = fb_tag->framebuffer_height;
             fb_info.pitch = fb_tag->framebuffer_pitch;
             fb_info.bpp = fb_tag->framebuffer_bpp;
+            fb_info.type = fb_tag->framebuffer_type;
             
             serial_printf("Framebuffer found:\n");
             serial_printf("  Address: 0x%llx\n", fb_info.address);
@@ -297,28 +354,24 @@ struct framebuffer_info* framebuffer_init(uint64_t multiboot_info_addr) {
             serial_printf("  Height: %u\n", fb_info.height);
             serial_printf("  Pitch: %u\n", fb_info.pitch);
             serial_printf("  BPP: %u\n", fb_info.bpp);
+            serial_printf("  Type: %u\n", fb_info.type);
             
             // 使用汇编中分配的后缓冲区
             extern uint8_t framebuffer_backbuffer[];
-            backbuffer = (uint32_t*)framebuffer_backbuffer;
+            backbuffer = framebuffer_backbuffer;
             
-            // 验证后缓冲区地址
             serial_printf("Backbuffer at: 0x%llx\n", (uint64_t)backbuffer);
             
-            // 计算屏幕大小
-            uint32_t screen_size = fb_info.width * fb_info.height;
-            serial_printf("Screen size: %u pixels\n", screen_size);
-            
-            // 清空后缓冲区为黑色
-            for (uint32_t i = 0; i < screen_size; i++) {
-                backbuffer[i] = COLOR_BLACK;
+            // 清空后缓冲区
+            uint32_t backbuffer_size = fb_info.height * fb_info.pitch;
+            for (uint32_t i = 0; i < backbuffer_size; i++) {
+                backbuffer[i] = 0;
             }
             
             serial_printf("Framebuffer initialized successfully\n");
             return &fb_info;
         }
         
-        // 移动到下一个tag（8字节对齐）
         current_tag += tag->size;
         if ((uint64_t)current_tag % 8 != 0) {
             current_tag += 8 - ((uint64_t)current_tag % 8);
@@ -339,14 +392,8 @@ void framebuffer_draw_rect(int x, int y, int width, int height, uint32_t color) 
     // 边界检查
     if (x < 0) x = 0;
     if (y < 0) y = 0;
-    if (x >= (int)fb_info.width) {
-        serial_printf("Warning: x coordinate out of bounds\n");
-        return;
-    }
-    if (y >= (int)fb_info.height) {
-        serial_printf("Warning: y coordinate out of bounds\n");
-        return;
-    }
+    if (x >= (int)fb_info.width) return;
+    if (y >= (int)fb_info.height) return;
     
     int end_x = x + width;
     int end_y = y + height;
@@ -358,10 +405,7 @@ void framebuffer_draw_rect(int x, int y, int width, int height, uint32_t color) 
     
     for (int row = y; row < end_y; row++) {
         for (int col = x; col < end_x; col++) {
-            uint32_t offset = row * fb_info.width + col;
-            if (offset < fb_info.width * fb_info.height) {
-                backbuffer[offset] = color;
-            }
+            draw_pixel(backbuffer, col, row, color, fb_info.bpp, fb_info.width, fb_info.pitch);
         }
     }
 }
@@ -378,18 +422,19 @@ void framebuffer_swap_buffers(void) {
         return;
     }
     
-    // 直接使用物理地址访问前缓冲区（恒等映射）
-    uint32_t* frontbuffer = (uint32_t*)fb_info.address;
-    uint32_t screen_size = fb_info.width * fb_info.height;
+    uint8_t* frontbuffer = (uint8_t*)fb_info.address;
+    uint32_t buffer_size = fb_info.height * fb_info.pitch;
     
     serial_printf("Swapping buffers:\n");
     serial_printf("  Resolution: %dx%d\n", fb_info.width, fb_info.height);
+    serial_printf("  BPP: %u\n", fb_info.bpp);
+    serial_printf("  Pitch: %u\n", fb_info.pitch);
     serial_printf("  Frontbuffer: 0x%llx\n", (uint64_t)frontbuffer);
     serial_printf("  Backbuffer: 0x%llx\n", (uint64_t)backbuffer);
-    serial_printf("  Screen size: %u pixels\n", screen_size);
+    serial_printf("  Buffer size: %u bytes\n", buffer_size);
     
     // 将后缓冲区复制到前缓冲区
-    for (uint32_t i = 0; i < screen_size; i++) {
+    for (uint32_t i = 0; i < buffer_size; i++) {
         frontbuffer[i] = backbuffer[i];
     }
     
@@ -402,7 +447,6 @@ void kernel_main()
     serial_printf("=== SolumOS Kernel Started ===\n");
     serial_printf("Multiboot info structure at: 0x%llx\n", multiboot2_info_addr);
     
-    // 初始化帧缓冲区
     struct framebuffer_info* fb_info = framebuffer_init(multiboot2_info_addr);
     
     if (!fb_info) {
@@ -415,53 +459,86 @@ void kernel_main()
     
     serial_printf("Starting graphics test pattern...\n");
     
-    // 先清空整个屏幕为黑色
-    framebuffer_draw_rect(0, 0, fb_info->width, fb_info->height, COLOR_BLACK);
+    // 根据BPP选择合适的颜色
+    uint32_t black_color, red_color, green_color, blue_color;
+    
+    switch (fb_info->bpp) {
+        case 16:
+            black_color = COLOR_BLACK16;
+            red_color = COLOR_RED16;
+            green_color = COLOR_GREEN16;
+            blue_color = COLOR_BLUE16;
+            break;
+        case 24:
+            black_color = COLOR_BLACK24;
+            red_color = COLOR_RED24;
+            green_color = COLOR_GREEN24;
+            blue_color = COLOR_BLUE24;
+            break;
+        case 32:
+        default:
+            black_color = COLOR_BLACK32;
+            red_color = COLOR_RED32;
+            green_color = COLOR_GREEN32;
+            blue_color = COLOR_BLUE32;
+            break;
+    }
+    
+    serial_printf("Using colors for %u bpp\n", fb_info->bpp);
+    
+    // 清空整个屏幕
+    framebuffer_draw_rect(0, 0, fb_info->width, fb_info->height, black_color);
     
     // 计算屏幕中心
     int center_x = fb_info->width / 2;
     int center_y = fb_info->height / 2;
-    int rect_size = 100; // 100x100像素的方块
     
     serial_printf("Screen center: (%d, %d)\n", center_x, center_y);
     
-    // 在屏幕中央绘制一个红色大方块
+    // 根据屏幕大小调整方块尺寸
+    int rect_size;
+    if (fb_info->width <= 80 || fb_info->height <= 25) {
+        // 文本模式或小分辨率
+        rect_size = 10;
+    } else {
+        // 图形模式
+        rect_size = 100;
+    }
+    
+    // 绘制彩色方块
     framebuffer_draw_rect(
         center_x - rect_size/2, 
         center_y - rect_size/2, 
         rect_size, 
         rect_size, 
-        COLOR_RED
+        red_color
     );
     
-    // 在红色方块内部绘制一个较小的绿色方块
     framebuffer_draw_rect(
         center_x - rect_size/4, 
         center_y - rect_size/4, 
         rect_size/2, 
         rect_size/2, 
-        COLOR_GREEN
+        green_color
     );
     
-    // 在绿色方块内部绘制一个更小的蓝色方块
     framebuffer_draw_rect(
         center_x - rect_size/8, 
         center_y - rect_size/8, 
         rect_size/4, 
         rect_size/4, 
-        COLOR_BLUE
+        blue_color
     );
     
     serial_printf("Test pattern drawn, swapping buffers...\n");
     
-    // 交换缓冲区，显示内容
+    // 交换缓冲区
     framebuffer_swap_buffers();
     
     serial_printf("=== Graphics test completed successfully ===\n");
-    serial_printf("You should now see concentric colored squares in the center of the screen.\n");
     
     // 主循环
     while (1) {
-        asm volatile ("hlt"); // 节省CPU
+        asm volatile ("hlt");
     }
 }
