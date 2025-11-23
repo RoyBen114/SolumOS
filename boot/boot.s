@@ -44,11 +44,6 @@ pd_table:
 stack_bottom:
     resb 16384
 stack_top:
-
-global framebuffer_backbuffer
-
-framebuffer_backbuffer:
-    resb 1024 * 768 * 4
     
 section .data
 align 8

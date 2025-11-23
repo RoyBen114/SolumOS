@@ -4,7 +4,6 @@
 #include "../lib/io/io.h"
 
 extern uint64_t multiboot2_info_addr;
-#define MULTIBOOT2_TAG_TYPE_FRAMEBUFFER 8
 
 struct multiboot2_tag {
     uint32_t type;
@@ -80,7 +79,7 @@ void graphics_fill_test(uint64_t fb_addr, uint32_t width, uint32_t height, uint3
         }
         
         // 延迟
-        for (volatile int i = 0; i < 1000000000; i++);
+        for (volatile int i = 0; i < 100000000; i++);
         
         // 测试2: 尝试RGB格式
         serial_printf("Test 2: BGR format (Red=0, Green=255, Blue=0)\n");
@@ -94,14 +93,14 @@ void graphics_fill_test(uint64_t fb_addr, uint32_t width, uint32_t height, uint3
         }
         
         // 延迟
-        for (volatile int i = 0; i < 1000000000; i++);
+        for (volatile int i = 0; i < 100000000; i++);
         
         // 测试3: 蓝色屏幕
         serial_printf("Test 3: BGR format (Red=0, Green=0, Blue=255)\n");
         for (uint32_t y = 0; y < height; y++) {
             for (uint32_t x = 0; x < width; x++) {
                 uint32_t offset = y * pitch + x * 3;
-                fb[offset] = 0;     // R
+                fb[offset] = 0;   // R
                 fb[offset + 1] = 0; // G
                 fb[offset + 2] = 255; // B
             }
@@ -126,7 +125,7 @@ void kernel_main()
         
         if (tag->type == 0) break;
         
-        if (tag->type == MULTIBOOT2_TAG_TYPE_FRAMEBUFFER) {
+        if (tag->type == 8) {
             struct multiboot2_tag_framebuffer* fb_tag = 
                 (struct multiboot2_tag_framebuffer*)tag;
             
@@ -136,16 +135,16 @@ void kernel_main()
             fb_pitch = fb_tag->framebuffer_pitch;
             fb_bpp = fb_tag->framebuffer_bpp;
             
-            serial_printf("Framebuffer: 0x%x, %dx%d, %dbpp\n", 
+            serial_printf("Framebuffer: %X, %dx%d, %dbpp\n", 
                          fb_addr, fb_width, fb_height, fb_bpp);
             
             // 判断是图形模式还是文本模式
             if (fb_width > 80 || fb_height > 25 || fb_bpp > 16) {
                 is_graphics_mode = 1;
-                serial_printf("Graphics mode detected");
+                serial_printf("Graphics mode detected\n");
             } else {
                 is_graphics_mode = 0;
-                serial_printf("Text mode detected");
+                serial_printf("Text mode detected\n");
             }
             break;
         }
@@ -157,11 +156,11 @@ void kernel_main()
     }
     
     if (fb_addr == 0) {
-        serial_printf("No framebuffer found!");
+        serial_printf("No framebuffer found!\n");
     } else if (is_graphics_mode) {
         // 图形模式测试
         graphics_fill_test(fb_addr, fb_width, fb_height, fb_pitch, fb_bpp);
-        serial_printf("Graphics test completed - you should have seen red and green screens");
+        serial_printf("Graphics test completed\n");
     } else {
         // 文本模式测试
         uint16_t* text_fb = (uint16_t*)fb_addr;
@@ -170,10 +169,10 @@ void kernel_main()
         text_mode_puts(text_fb, 0, 1, "Text Mode: 80x25", TEXT_COLOR_WHITE);
         text_mode_puts(text_fb, 0, 2, "Frame Buffer Test", TEXT_COLOR_RED);
         text_mode_puts(text_fb, 0, 3, "UEFI not available - Using BIOS", TEXT_COLOR_BLUE);
-        serial_printf("Text mode test completed");
+        serial_printf("Text mode test completed\n");
     }
     
-    serial_printf("System ready.");
+    serial_printf("System ready.\n");
     
     // 主循环
     while (1) {
