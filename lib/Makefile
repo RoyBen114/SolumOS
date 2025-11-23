@@ -1,5 +1,4 @@
-C_SRC = $(shell find . -name "*.c")
-O_OBJ = $(wildcard *.o)
+C_SRC = $(wildcard *.c)
 
 all:
 	gcc -c -fno-builtin -nostdlib -nostartfiles -nodefaultlibs -mno-red-zone -ffreestanding $(C_SRC) 

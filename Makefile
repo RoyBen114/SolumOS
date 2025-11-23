@@ -8,15 +8,15 @@ BOOT_S = boot/boot.s
 KERN_C = kernel/kernel.c
 INFO_C = boot/info.c
 LIB_C = $(shell find lib/ -name "*.c")
-LIB_OBJ = $(wildcard lib/*.o)
+LIB_OBJ = $(patsubst %.c, %.o, $(LIB_C))
 
 $(TARGET): $(KELF) grub.cfg
 	cp grub.cfg ISODir/boot/grub/grub.cfg
 	cp $(KELF) ISODir/SolumOS/$(KELF)
 	grub-mkrescue -o Solum.iso ISODir/
 
-$(KELF): $(BOOT_OBJ) $(INFO_OBJ) $(KERN_OBJ) $(LIB_OBJ) $(LINKSCR)
-	ld -n -T $(LINKSCR) -o $(KELF) $(BOOT_OBJ) $(INFO_OBJ) $(KERN_OBJ) $(LIB_OBJ)
+$(KELF): $(BOOT_OBJ) $(KERN_OBJ) $(INFO_OBJ) $(LIB_OBJ) $(LINKSCR)
+	ld -n -T $(LINKSCR) -o $(KELF) $(BOOT_OBJ) $(KERN_OBJ) $(INFO_OBJ) $(LIB_OBJ)
 
 $(BOOT_OBJ): $(BOOT_S)
 	make -C boot BOOT_O

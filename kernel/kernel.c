@@ -5,9 +5,9 @@
 #include "../lib/io/io.h"
 
 // 图形模式填充测试
-void graphics_fill_test(uint64_t fb_addr, uint32_t width, uint32_t height, uint32_t pitch, uint32_t bpp) {
+void graphics_fill_test(uint64_t fb_addr1, uint32_t width, uint32_t height, uint32_t pitch, uint32_t bpp) {
     serial_printf("Graphics mode: %dx%d, bpp=%d, pitch=%d\n", width, height, bpp, pitch);
-        uint8_t* fb = (uint8_t*)fb_addr;
+        uint8_t* fb = (uint8_t*)fb_addr1;
         
         // 测试1: 尝试RGB格式
         serial_printf("Test 1: BGR format (Red=255, Green=0, Blue=0)\n");
@@ -21,7 +21,7 @@ void graphics_fill_test(uint64_t fb_addr, uint32_t width, uint32_t height, uint3
         }
         
         // 延迟
-        for (volatile int i = 0; i < 100000000; i++);
+        for (volatile int i = 0; i < 1000000000; i++);
         
         // 测试2: 尝试RGB格式
         serial_printf("Test 2: BGR format (Red=0, Green=255, Blue=0)\n");
@@ -35,7 +35,7 @@ void graphics_fill_test(uint64_t fb_addr, uint32_t width, uint32_t height, uint3
         }
         
         // 延迟
-        for (volatile int i = 0; i < 100000000; i++);
+        for (volatile int i = 0; i < 1000000000; i++);
         
         // 测试3: 蓝色屏幕
         serial_printf("Test 3: BGR format (Red=0, Green=0, Blue=255)\n");
