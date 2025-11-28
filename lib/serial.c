@@ -84,7 +84,7 @@ static void serial_put_hex(uint64_t value, bool uppercase)
     serial_puts(buffer);
 }
 
-static int serial_vprintf(const char *format, va_list args)
+static int serial_vprintk(const char *format, va_list args)
 {
     char buffer[32];
     const char *p = format;
@@ -209,11 +209,11 @@ static int serial_vprintf(const char *format, va_list args)
     return chars_written;
 }
 
-void serial_printf(const char *format, ...)
+void serial_printk(const char *format, ...)
 {
     va_list args;
     va_start(args, format);
-    serial_vprintf(format, args);
+    serial_vprintk(format, args);
     va_end(args);
 }
 

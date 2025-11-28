@@ -128,7 +128,7 @@ void vga_puts(const char *str)
     vga_puts_color(str, BLACK, WHITE);
 }
 
-static int vga_vprintf_color(vga_color_t back, vga_color_t fore, const char *format, va_list args)
+static int vga_vprintk_color(vga_color_t back, vga_color_t fore, const char *format, va_list args)
 {
     char buffer[32];
     const char *p = format;
@@ -205,19 +205,19 @@ static int vga_vprintf_color(vga_color_t back, vga_color_t fore, const char *for
     return chars_written;
 }
 
-void vga_printf_color(vga_color_t back, vga_color_t fore, const char *format, ...)
+void vga_printk_color(vga_color_t back, vga_color_t fore, const char *format, ...)
 {
     va_list args;
     va_start(args, format);
-    vga_vprintf_color(back, fore, format, args);
+    vga_vprintk_color(back, fore, format, args);
     va_end(args);
 }
 
-void vga_printf(const char *format, ...)
+void vga_printk(const char *format, ...)
 {
     va_list args;
     va_start(args, format);
-    vga_vprintf_color(BLACK, WHITE, format, args);
+    vga_vprintk_color(BLACK, WHITE, format, args);
     va_end(args);
 }
 

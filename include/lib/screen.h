@@ -31,7 +31,7 @@ void vga_putc(char c);
 void vga_putc_color(char c, vga_color_t back, vga_color_t fore);
 void vga_puts(const char *str);
 void vga_puts_color(const char *str, vga_color_t back, vga_color_t fore);
-void vga_printf(const char *format, ...);
-void vga_printf_color(vga_color_t back, vga_color_t fore, const char *format, ...);
+void vga_printk(const char *format, ...);
+void vga_printk_color(vga_color_t back, vga_color_t fore, const char *format, ...);
 
 #endif

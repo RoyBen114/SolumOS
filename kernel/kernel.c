@@ -11,10 +11,10 @@ void kernel_main()
     vga_init();
     parse_mb_info();
 
-    vga_printf("Welcome to Solum OS!\n");
-    serial_printf("Welcome to Solum OS!\n");
-    vga_printf("Version (a0.01)\n");
-    serial_printf("Version (a0.01)\n");
-    vga_printf("By Roy 2025\n");
-    serial_printf("By Roy 2025\n");
+    vga_printk("Welcome to Solum OS!\n");
+    serial_printk("Welcome to Solum OS!\n");
+    vga_printk("Version (a0.01)\n");
+    serial_printk("Version (a0.01)\n");
+    vga_printk("By Roy 2025\n");
+    serial_printk("By Roy 2025\n");
 }
