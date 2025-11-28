@@ -11,7 +11,7 @@ BOOT_O:
 	nasm -f elf64 $(S_SRC) -o $(BOOT_OBJ)
 
 INFO_O:
-	gcc -c -fno-builtin -nostdlib -nostartfiles -nodefaultlibs -mno-red-zone -ffreestanding $(C_SRC) $(INFO_OBJ)
+	gcc -c -I../include -fno-builtin -nostdlib -nostartfiles -nodefaultlibs -mno-red-zone -ffreestanding $(C_SRC) $(INFO_OBJ)
 
 clean:
 	rm -f $(BOOT_OBJ)
