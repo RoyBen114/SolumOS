@@ -1,6 +1,6 @@
 #include <stdint.h>
 #include <stddef.h>
-#include "info.h"
+#include <boot/info.h>
 
 extern uint64_t multiboot2_info_addr;
 
@@ -35,10 +35,6 @@ void parse_mb_info()
             break;
         }
 
-        current_tag += tag->size;
-        if ((uint64_t)current_tag % 8 != 0)
-        {
-            current_tag += 8 - ((uint64_t)current_tag % 8);
-        }
+        current_tag += (tag->size + 7) & ~7;
     }
 }

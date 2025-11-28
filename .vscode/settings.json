@@ -1,0 +1,8 @@
+{
+    "files.associations": {
+        "port.h": "c",
+        "serial.h": "c",
+        "string.h": "c",
+        "screen.h": "c"
+    }
+}

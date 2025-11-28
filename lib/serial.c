@@ -2,9 +2,9 @@
 #include <stdint.h>
 #include <stdarg.h>
 #include <stdbool.h>
-#include "serial.h"
-#include "port.h"
-#include "string.h"
+#include <lib/serial.h>
+#include <lib/port.h>
+#include <lib/string.h>
 
 #define SERIAL_PORT 0x3F8
 
@@ -260,8 +260,12 @@ bool serial_read_line(char *buffer, size_t buffer_size)
     return true;
 }
 
-int serial_scanf(const char *format, ...)
+int serial_scank(const char *format, ...)
 {
+    if (!format || !*format) {
+        return 0;
+    }
+
     char input_buffer[128];
     if (!serial_read_line(input_buffer, sizeof(input_buffer))) {
         return 0;

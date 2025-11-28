@@ -73,7 +73,7 @@ boot_start:
 
     mov esp, stack_top
     
-    jz .goto_long_mode
+    jmp .goto_long_mode
 
 .goto_long_mode:
 

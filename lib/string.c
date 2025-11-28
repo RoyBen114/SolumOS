@@ -1,7 +1,7 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
-#include "string.h"
+#include <lib/string.h>
 
 void memcpy(void *dest, const void *src, size_t len)
 {
@@ -61,7 +61,13 @@ char *strcat(char *dest, const char *src)
 
 char *uint_to_string(uint32_t num, char *buffer, size_t buffer_size)
 {
-    if (buffer_size == 0) return buffer;
+    if (buffer_size == 0 || !buffer) return buffer;
+
+    // Make sure there's enough space to store 4294967295
+    if (buffer_size < 12) {
+        if (buffer_size > 0) buffer[0] = '\0';
+        return buffer;
+    }
     
     char *ptr = buffer;
     char *end = buffer + buffer_size - 1;

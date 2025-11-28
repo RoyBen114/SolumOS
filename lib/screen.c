@@ -2,9 +2,9 @@
 #include <stddef.h>
 #include <stdarg.h>
 #include <stdbool.h>
-#include "screen.h"
-#include "string.h"
-#include "port.h"
+#include <lib/screen.h>
+#include <lib/string.h>
+#include <lib/port.h>
 
 #define SCREEN_WIDTH 80
 #define SCREEN_HEIGHT 25
@@ -25,11 +25,12 @@ static void move_cursor(void)
 
 void move_cursor_by_xy(uint8_t x, uint8_t y)
 {
-    if (x < SCREEN_WIDTH && y < SCREEN_HEIGHT) {
-        cursor_x = x;
-        cursor_y = y;
-        move_cursor();
-    }
+    if (x >= SCREEN_WIDTH) x = SCREEN_WIDTH - 1;
+    if (y >= SCREEN_HEIGHT) y = SCREEN_HEIGHT - 1;
+    
+    cursor_x = x;
+    cursor_y = y;
+    move_cursor();
 }
 
 void clear_screen(void)
