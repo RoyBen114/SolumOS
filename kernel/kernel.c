@@ -20,20 +20,31 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <stdarg.h>
-#include <boot/info.h>
+#include <arch/x86_64/info.h>
 #include <lib/serial.h>
-#include <lib/screen.h>
+#include <kernel/module.h>
+#include <kernel/ipc.h>
+#include <kernel/arbitration.h>
+
+/* forward declarations for module init wrappers */
+int serial_module_init(void *ctx);
+int vga_module_init(void *ctx);
 
 void kernel_main() 
 {
-    serial_init();
-    vga_init();
+    /* initialize microkernel subsystems */
+    ipc_init();
+    arbitration_init();
+
+    /* parse boot info as before */
     parse_mb_info();
 
-    vga_printk("Welcome to Solum OS!\n");
+    /* register modules (PoC) */
+    module_register("serial", serial_module_init, NULL, NULL);
+    module_register("vga", vga_module_init, NULL, NULL);
+    module_init_all();
+
     serial_printk("Welcome to Solum OS!\n");
-    vga_printk("Version (a0.01)\n");
     serial_printk("Version (a0.01)\n");
-    vga_printk("By Roy - 2025\n");
     serial_printk("By Roy - 2025\n");
 }

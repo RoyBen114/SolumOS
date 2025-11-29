@@ -22,6 +22,7 @@ KELF = kernel.elf
 LINKSCR = linker.ld
 BUILD ?= release
 INCDIR := $(CURDIR)/include
+ARCH ?= x86_64
 
 ifeq ($(BUILD),release)
 CFLAGS := -c -O2 -I$(INCDIR) -fno-builtin -nostdlib -nostartfiles -nodefaultlibs -mno-red-zone -ffreestanding
@@ -29,12 +30,14 @@ else ifeq ($(BUILD),debug)
 CFLAGS := -g -c -O0 -I$(INCDIR) -fno-builtin -nostdlib -nostartfiles -nodefaultlibs -mno-red-zone -ffreestanding
 endif
 
-BOOT_OBJ = boot/boot.o
+BOOT_OBJ = arch/x86_64/boot.o
 KERN_OBJ = kernel/kernel.o
-INFO_OBJ = boot/info.o
-BOOT_S = boot/boot.s
+INFO_OBJ = arch/x86_64/info.o
+BOOT_S = arch/x86_64/boot.s
 KERN_C = kernel/kernel.c
-INFO_C = boot/info.c
+INFO_C = arch/$(ARCH)/info.c
+ARCH_C = arch/$(ARCH)/port.c
+ARCH_OBJ = arch/$(ARCH)/port.o
 LIB_C = $(shell find lib/ -name "*.c")
 LIB_OBJ = $(patsubst %.c, %.o, $(LIB_C))
 
@@ -43,20 +46,24 @@ $(TARGET): $(KELF) grub.cfg
 	cp $(KELF) ISODir/SolumOS/$(KELF)
 	grub-mkrescue -o Solum.iso ISODir/
 
-$(KELF): $(BOOT_OBJ) $(KERN_OBJ) $(INFO_OBJ) $(LIB_OBJ) $(LINKSCR)
-	ld -n -T $(LINKSCR) -o $(KELF) $(BOOT_OBJ) $(KERN_OBJ) $(INFO_OBJ) $(LIB_OBJ)
+$(KELF): $(BOOT_OBJ) $(KERN_OBJ) $(INFO_OBJ) $(LIB_OBJ) $(ARCH_OBJ) $(LINKSCR)
+	ld -n -T $(LINKSCR) -o $(KELF) $(BOOT_OBJ) $(KERN_OBJ) $(INFO_OBJ) $(LIB_OBJ) $(ARCH_OBJ)
 
 $(BOOT_OBJ): $(BOOT_S)
-	make -C boot BOOT_O
+	# assemble boot sector for $(ARCH) arch
+	nasm -f elf64 $(BOOT_S) -o $(BOOT_OBJ)
 
 $(INFO_OBJ): $(INFO_C)
-	make -C boot INFO_O CFLAGS="$(CFLAGS)" 
+	gcc $(CFLAGS) $(INFO_C) -o $(INFO_OBJ)
+
+$(ARCH_OBJ): $(ARCH_C)
+	gcc $(CFLAGS) $(ARCH_C) -o $(ARCH_OBJ)
 
 $(KERN_OBJ): $(KERN_C)
 	make -C kernel KERN_O CFLAGS="$(CFLAGS)" 
 
 $(LIB_OBJ): $(LIB_C)
-	make -C lib all CFLAGS="$(CFLAGS)" 
+	make -C lib all CFLAGS="$(CFLAGS)" ARCH=$(ARCH)
 
 clean: 
 	make -C boot clean

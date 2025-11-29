@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-C_SRC = kernel.c
+C_SRC = kernel.c module.c ipc.c arbitration.c
 KERN_OBJ = kernel.o
 
 KERN_O:

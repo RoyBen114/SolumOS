@@ -17,7 +17,10 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-C_SRC = $(wildcard *.c)
+ARCH ?= x86_64
+
+# compile common lib sources plus architecture-specific sources under lib/arch/$(ARCH)
+C_SRC = string.c $(wildcard arch/$(ARCH)/*.c)
 O_OBJ = $(patsubst %.c, %.o, $(C_SRC))
 
 all:
