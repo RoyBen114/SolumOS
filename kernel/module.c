@@ -67,25 +67,3 @@ void module_list(void)
         }
     }
 }
-
-/* Example module init wrappers for existing drivers (provide here so
- * kernel can link without separate module files in PoC) */
-int serial_module_init(void *ctx)
-{
-    (void)ctx;
-    extern void serial_init(void);
-    extern void serial_printk(const char *fmt, ...);
-    serial_init();
-    serial_printk("serial module initialized\n");
-    return 0;
-}
-
-int vga_module_init(void *ctx)
-{
-    (void)ctx;
-    extern void vga_init(void);
-    extern void vga_printk(const char *fmt, ...);
-    vga_init();
-    vga_printk("vga module initialized\n");
-    return 0;
-}
