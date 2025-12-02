@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-TARGET = Solum.iso
+ISO = Solum.iso
 KELF = kernel.elf
 LINKSCR = linker.ld
 BUILD ?= release
@@ -30,16 +30,15 @@ CFLAGS := -g -c -O0 -I$(INCDIR) -fno-builtin -nostdlib -nostartfiles -nodefaultl
 endif
 
 BOOT_S = boot/boot.s
-KERN_C = $(shell find kernel/ -name "*.c")
 INFO_C = boot/info.c
+KERN_C = $(shell find kernel/ -name "*.c")
 LIB_C = $(shell find lib/ -name "*.c")
 BOOT_OBJ = boot/boot.o
-KERN_OBJ = $(patsubst %.c, %.o, $(KERN_C))
 INFO_OBJ = boot/info.o
+KERN_OBJ = $(patsubst %.c, %.o, $(KERN_C))
 LIB_OBJ = $(patsubst %.c, %.o, $(LIB_C))
 
-$(TARGET): $(KELF) grub.cfg
-	cp grub.cfg ISODir/boot/grub/grub.cfg
+$(ISO): $(KELF) grub.cfg
 	cp $(KELF) ISODir/SolumOS/$(KELF)
 	grub-mkrescue -o Solum.iso ISODir/
 
@@ -56,21 +55,21 @@ $(KERN_OBJ): $(KERN_C)
 	make -C kernel KERN_O CFLAGS="$(CFLAGS)" 
 
 $(LIB_OBJ): $(LIB_C)
-	make -C lib all CFLAGS="$(CFLAGS)" 
+	make -C lib LIB_O CFLAGS="$(CFLAGS)" 
 
 clean: 
 	make -C boot clean
 	make -C kernel clean
 	make -C lib clean
-	rm -f $(TARGET)
+	rm -f $(ISO)
 	rm -f $(KELF)
 
 debug_B:
 	make BUILD=debug
-	qemu-system-x86_64 -cdrom $(TARGET) -m 1G -serial stdio -S -s
+	qemu-system-x86_64 -cdrom $(ISO) -m 1G -serial stdio -S -s
 
 debug_U:
 	make BUILD=debug
-	qemu-system-x86_64 -bios /usr/share/ovmf/OVMF.fd -cdrom $(TARGET) -m 1G -serial stdio -S -s
+	qemu-system-x86_64 -bios /usr/share/ovmf/OVMF.fd -cdrom $(ISO) -m 1G -serial stdio -S -s
 
 .PHONY: debug_B debug_U

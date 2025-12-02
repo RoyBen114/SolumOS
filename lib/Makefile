@@ -20,10 +20,10 @@
 C_SRC = $(wildcard *.c)
 O_OBJ = $(patsubst %.c, %.o, $(C_SRC))
 
-all:
+LIB_O:
 	gcc $(CFLAGS) $(C_SRC)
 
 clean:
 	rm -f $(O_OBJ)
 
-.PHONY: clean all
+.PHONY: clean LIB_O
