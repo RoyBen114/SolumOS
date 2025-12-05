@@ -48,4 +48,11 @@ SECTIONS
         *(COMMON)
         *(.bss)
     }
+
+    /DISCARD/ :
+    {
+        *(.note*)
+        *(.comment*)
+        *(.eh_frame*)
+    }
 }
