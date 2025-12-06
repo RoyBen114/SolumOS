@@ -32,40 +32,34 @@ endif
 BOOT_S = boot/boot.s
 INFO_C = boot/info.c
 KERN_C = $(shell find kernel/ -name "*.c")
-LIB_C = $(shell find lib/ -name "*.c")
-BOOT_OBJ = boot/boot.o
-INFO_OBJ = boot/info.o
-KERN_OBJ = $(patsubst %.c, %.o, $(KERN_C))
-LIB_OBJ = $(patsubst %.c, %.o, $(LIB_C))
+BOOT_O = boot/boot.o
+INFO_O = boot/info.o
+KERN_O = $(patsubst %.c, %.o, $(KERN_C))
 INIT_C = init/main.c
-INIT_OBJ = init/main.o
+INIT_O = init/main.o
 
 $(ISO): $(KELF) ISODir/boot/grub/grub.cfg
 	cp $(KELF) ISODir/SolumOS/$(KELF)
 	grub-mkrescue -o Solum.iso ISODir/ -- -volid "Solum OS"
 
-$(KELF): $(BOOT_OBJ) $(INIT_OBJ) $(KERN_OBJ) $(INFO_OBJ) $(LIB_OBJ) $(LINKSCR)
-	ld -n -T $(LINKSCR) -o $(KELF) $(BOOT_OBJ) $(INIT_OBJ) $(KERN_OBJ) $(INFO_OBJ) $(LIB_OBJ) -z noexecstack
+$(KELF): $(BOOT_O) $(INIT_O) $(KERN_O) $(INFO_O) $(LINKSCR)
+	ld -n -T $(LINKSCR) -o $(KELF) $(BOOT_O) $(INIT_O) $(KERN_O) $(INFO_O) -z noexecstack
 
-$(BOOT_OBJ): $(BOOT_S)
+$(BOOT_O): $(BOOT_S)
 	make -C boot BOOT_O
 
-$(INFO_OBJ): $(INFO_C)
+$(INFO_O): $(INFO_C)
 	make -C boot INFO_O CFLAGS="$(CFLAGS)" 
 
-$(KERN_OBJ): $(KERN_C)
+$(KERN_O): $(KERN_C)
 	make -C kernel CFLAGS="$(CFLAGS)" 
 
-$(LIB_OBJ): $(LIB_C)
-	make -C lib CFLAGS="$(CFLAGS)" 
-
-$(INIT_OBJ): $(INIT_C)
+$(INIT_O): $(INIT_C)
 	make -C init CFLAGS="$(CFLAGS)"
 
 clean: 
 	make -C boot clean
 	make -C kernel clean
-	make -C lib clean
 	make -C init clean
 	rm -f $(ISO)
 	rm -f $(KELF)
@@ -78,4 +72,8 @@ debug_U:
 	make BUILD=debug
 	qemu-system-x86_64 -bios /usr/share/ovmf/OVMF.fd -cdrom $(ISO) -m 1G -serial stdio -S -s
 
-.PHONY: clean debug_B debug_U
+run:
+	make
+	qemu-system-x86_64 -cdrom Solum.iso -m 1G -serial stdio
+
+.PHONY: clean debug_B debug_U run

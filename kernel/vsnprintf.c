@@ -21,7 +21,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <stdbool.h>
-#include <lib/string.h>
+#include <kernel/lib/string.h>
 #include <kernel/vsnprintf.h>
 
 int vsnprintf(char *out, size_t out_sz, const char *fmt, va_list args)

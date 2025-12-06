@@ -26,7 +26,7 @@
 #include <kernel/screen.h>
 #include <kernel/tty.h>
 #include <kernel/vsnprintf.h>
-#include <lib/string.h>
+#include <kernel/lib/string.h>
 
 static const char *level_tag(int level)
 {

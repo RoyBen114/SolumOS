@@ -23,7 +23,7 @@
 #include <stdbool.h>
 #include <kernel/serial.h>
 #include <kernel/port.h>
-#include <lib/string.h>
+#include <kernel/lib/string.h>
 
 #define SERIAL_PORT 0x3F8
 

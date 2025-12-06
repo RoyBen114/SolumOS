@@ -22,7 +22,7 @@
 #include <stdarg.h>
 #include <stdbool.h>
 #include <kernel/screen.h>
-#include <lib/string.h>
+#include <kernel/lib/string.h>
 #include <kernel/port.h>
 
 #define SCREEN_WIDTH 80
