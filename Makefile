@@ -66,6 +66,7 @@ clean:
 	make -C boot clean
 	make -C kernel clean
 	make -C lib clean
+	make -C init clean
 	rm -f $(ISO)
 	rm -f $(KELF)
 
