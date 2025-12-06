@@ -24,7 +24,7 @@
 #include <kernel/serial.h>
 #include <kernel/screen.h>
 
-void kernel_main() 
+void main() 
 {
     parse_mb_info();
     serial_init();

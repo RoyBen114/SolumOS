@@ -24,9 +24,9 @@ BUILD ?= release
 INCDIR := $(CURDIR)/include
 
 ifeq ($(BUILD),release)
-CFLAGS := -c -O3 -I$(INCDIR) -fno-builtin -nostdlib -nostartfiles -nodefaultlibs -mno-red-zone -ffreestanding -z noexecstack
+CFLAGS := -c -O3 -I$(INCDIR) -nostdlib -nostartfiles -nodefaultlibs -mno-red-zone -ffreestanding -z noexecstack
 else ifeq ($(BUILD),debug)
-CFLAGS := -g -c -O0 -I$(INCDIR) -fno-builtin -nostdlib -nostartfiles -nodefaultlibs -mno-red-zone -ffreestanding -z noexecstack
+CFLAGS := -g -c -O0 -I$(INCDIR) -nostdlib -nostartfiles -nodefaultlibs -mno-red-zone -ffreestanding -z noexecstack
 endif
 
 BOOT_S = boot/boot.s
@@ -37,13 +37,15 @@ BOOT_OBJ = boot/boot.o
 INFO_OBJ = boot/info.o
 KERN_OBJ = $(patsubst %.c, %.o, $(KERN_C))
 LIB_OBJ = $(patsubst %.c, %.o, $(LIB_C))
+INIT_C = init/main.c
+INIT_OBJ = init/main.o
 
 $(ISO): $(KELF) ISODir/boot/grub/grub.cfg
 	cp $(KELF) ISODir/SolumOS/$(KELF)
 	grub-mkrescue -o Solum.iso ISODir/ -- -volid "Solum OS"
 
-$(KELF): $(BOOT_OBJ) $(KERN_OBJ) $(INFO_OBJ) $(LIB_OBJ) $(LINKSCR)
-	ld -n -T $(LINKSCR) -o $(KELF) $(BOOT_OBJ) $(KERN_OBJ) $(INFO_OBJ) $(LIB_OBJ) -z noexecstack
+$(KELF): $(BOOT_OBJ) $(INIT_OBJ) $(KERN_OBJ) $(INFO_OBJ) $(LIB_OBJ) $(LINKSCR)
+	ld -n -T $(LINKSCR) -o $(KELF) $(BOOT_OBJ) $(INIT_OBJ) $(KERN_OBJ) $(INFO_OBJ) $(LIB_OBJ) -z noexecstack
 
 $(BOOT_OBJ): $(BOOT_S)
 	make -C boot BOOT_O
@@ -56,6 +58,9 @@ $(KERN_OBJ): $(KERN_C)
 
 $(LIB_OBJ): $(LIB_C)
 	make -C lib CFLAGS="$(CFLAGS)" 
+
+$(INIT_OBJ): $(INIT_C)
+	make -C init CFLAGS="$(CFLAGS)"
 
 clean: 
 	make -C boot clean

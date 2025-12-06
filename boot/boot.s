@@ -144,8 +144,8 @@ kernel_entry:
     mov gs, ax
     mov ss, ax
     mov rsp, stack_top
-    extern kernel_main
+    extern main
     mov rdi, [multiboot2_info_addr]
-    call kernel_main
+    call main
     hlt
     jmp $
